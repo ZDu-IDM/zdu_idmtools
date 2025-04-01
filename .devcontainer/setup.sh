@@ -11,9 +11,9 @@ pip install numpy pandas matplotlib seaborn jupyterlab ipykernel jupytext
 
 
 # Verify Docker access
-sudo usermod -aG docker $USER
-sudo chown root:docker /var/run/docker.sock
-sudo chmod 666 /var/run/docker.sock
+# sudo usermod -aG docker $USER
+# sudo chown root:docker /var/run/docker.sock
+# sudo chmod 666 /var/run/docker.sock
 docker --version
 sudo chown -R $USER:$USER /workspaces
 
