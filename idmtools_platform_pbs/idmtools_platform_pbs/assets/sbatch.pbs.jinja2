@@ -1,0 +1,65 @@
+#!/bin/bash
+{% if job_name is defined and job_name is not none %}
+#PBS -N {{job_name}}
+{% endif %}
+{% if nodes is defined and nodes is not none %}
+#PBS -l {{select}}
+{% endif %}
+{% if wall_time is defined and wall_time is not none %}
+#PBS -l wall_time={{wall_time}}
+{% endif %}
+{% if email is defined and email is not none %}
+#PBS -M {{email}}
+{% endif %}
+{% if depend is defined and depend is not none %}
+#PBS -W depend=afterok:{{depend}}
+{% endif %}
+{% if queue is defined and queue is not none %}
+#PBS -q {{queue}}
+{% endif %}
+{% if environment is defined and environment is not none and exclusive %}
+#PBS -V {{environment}}
+{% endif %}
+{% if job_dir is defined and job_dir is not none and exclusive %}
+#PBS -d {{job_dir}}
+{% endif %}
+
+#PBS -o stdout.txt
+#PBS -e stderr.txt
+# #PBS -k oe  # This ensures new job logs append instead of overwrite
+#PBS -j oe
+
+
+{% if modules is defined and modules is not none and modules|length > 0 %}
+{% for m in modules %}
+module load {{m}}
+{% endfor %}
+{% endif %}
+
+# Otherwise, can't find the run_simulation.sh script
+cd $PBS_O_WORKDIR
+
+# Assign the values from the template
+ntasks={{ntasks|default(1)}}
+
+# Get mpi_type
+mpi_type={{mpi_type|lower}}
+
+# Access the start_task variable passed via -v
+start_task=${start_task}
+# # echo "Start task: $start_task"
+
+# All submissions happen at the experiment level
+# Check if ntasks is greater than 1 to include --mpi=$mpi_type
+if [ "$ntasks" -gt 1 ]; then
+    echo "Running with MPI (ntasks=$ntasks)"
+    bash run_simulation.sh "$start_task" "$mpi_type"
+else
+    echo "Running without MPI (ntasks=$ntasks)"
+    bash run_simulation.sh "$start_task" "no-mpi"
+fi
+wait
+
+
+
+

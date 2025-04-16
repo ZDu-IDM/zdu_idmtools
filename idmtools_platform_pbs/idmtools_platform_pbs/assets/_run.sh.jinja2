@@ -1,0 +1,44 @@
+#!/bin/bash
+
+#PBS -W signal=SIGTERM@30
+
+# Define the handler function
+term_handler()
+{
+    # Do whatever cleanup you want here
+    echo "-1" > job_status.txt
+    exit -1
+}
+
+# Associate the function "term_handler" with the TERM signal
+trap 'term_handler' TERM
+
+echo ${PBS_JOBID}_${PBS_ARRAY_INDEX} > job_id.txt
+
+n=0
+until [ "$n" -ge {{retries}} ]
+do
+    echo "100" > job_status.txt
+    {% if simulation.task.sif_path is defined and simulation.task.sif_path %}
+        {% if simulation.task.command.cmd.startswith('singularity') %}
+            {{simulation.task.command.cmd}}
+        {% else %}
+                {% if experiment_dir is defined and experiment_dir %}
+                    singularity exec --bind {{experiment_dir}} {{simulation.task.sif_path}} {{simulation.task.command.cmd}}
+                {% else %}
+                    singularity exec {{simulation.task.sif_path}} {{simulation.task.command.cmd}}
+                {% endif %}
+        {% endif %}
+    {% else %}
+        {{simulation.task.command.cmd}}
+    {% endif %}
+   RESULT=$?
+   if [ $RESULT -eq 0 ]; then
+      echo "0" > job_status.txt
+      exit $RESULT
+   fi
+   n=$((n+1))
+   sleep 15
+done
+echo "-1" > job_status.txt
+exit $RESULT
