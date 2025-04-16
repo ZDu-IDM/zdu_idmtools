@@ -71,11 +71,9 @@ class SlurmPlatformSpecification(PlatformSpecification):
         """Provides configuration aliases that exist in SLURM."""
         config_aliases = dict(
             SLURM_LOCAL=dict(
-                mode="local",
                 job_directory=str(Path.home())
             ),
-            SLURM_BRIDGED=dict(
-                mode="bridged",
+            SLURM=dict(
                 job_directory=str(Path.home())
             )
         )
