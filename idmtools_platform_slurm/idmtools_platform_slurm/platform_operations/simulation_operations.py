@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Type, Any
 from idmtools.core import ItemType, EntityStatus
 from idmtools_platform_file.platform_operations.simulation_operations import FilePlatformSimulationOperations
-from idmtools_platform_slurm.platform_operations.utils import SlurmSimulation
+from idmtools_platform_file.platform_operations.utils import FileSimulation
 from logging import getLogger
 
 logger = getLogger(__name__)
@@ -22,7 +22,7 @@ logger = getLogger(__name__)
 @dataclass
 class SlurmPlatformSimulationOperations(FilePlatformSimulationOperations):
     platform: 'SlurmPlatform'  # noqa: F821
-    platform_type: Type = field(default=SlurmSimulation)
+    platform_type: Type = field(default=FileSimulation)
 
     def platform_cancel(self, sim_id: str, force: bool = False) -> Any:
         """
@@ -36,12 +36,12 @@ class SlurmPlatformSimulationOperations(FilePlatformSimulationOperations):
         sim = self.platform.get_item(sim_id, ItemType.SIMULATION, raw=False)
         if force or sim.status == EntityStatus.RUNNING:
             logger.debug(f"cancel slurm job for simulation: {sim_id}...")
-            job_id = self.platform._op_client.get_job_id(sim_id, ItemType.SIMULATION)
+            job_id = self.platform.get_job_id(sim_id, ItemType.SIMULATION)
             if job_id is None:
                 logger.debug(f"Slurm job for simulation: {sim_id} is not available!")
                 return
             else:
-                result = self.platform._op_client.cancel_job(job_id)
+                result = self.platform.cancel_job(job_id)
                 user_logger.info(f"Cancel Simulation: {sim_id}: {result}")
                 return result
         else:

@@ -5,14 +5,16 @@ Copyright 2021, Bill & Melinda Gates Foundation. All rights reserved.
 """
 import os
 import shutil
+import subprocess
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Type, Dict
+from typing import TYPE_CHECKING, Type, Dict, Union, List, Any
 from idmtools.core import EntityStatus
 from idmtools.core import ItemType
 from idmtools.entities.experiment import Experiment
 from idmtools_platform_file.platform_operations.experiment_operations import FilePlatformExperimentOperations
-from idmtools_platform_slurm.platform_operations.utils import SlurmExperiment, add_dummy_suite
+from idmtools_platform_file.platform_operations.utils import FileExperiment, add_dummy_suite
+# from idmtools_platform_slurm.platform_operations.utils import SlurmExperiment, add_dummy_suite
 from logging import getLogger
 
 logger = getLogger(__name__)
@@ -25,24 +27,9 @@ if TYPE_CHECKING:
 @dataclass
 class SlurmPlatformExperimentOperations(FilePlatformExperimentOperations):
     platform: 'SlurmPlatform'  # noqa: F821
-    platform_type: Type = field(default=SlurmExperiment)
+    platform_type: Type = field(default=FileExperiment)
 
-    def get(self, experiment_id: str, **kwargs) -> Dict:
-        """
-        Gets an experiment from the Slurm platform.
-        Args:
-            experiment_id: experiment id
-            kwargs: keyword arguments used to expand functionality
-        Returns:
-            Slurm Experiment object
-        """
-        metas = self.platform._metas.filter(item_type=ItemType.EXPERIMENT, property_filter={'id': str(experiment_id)})
-        if len(metas) > 0:
-            return SlurmExperiment(metas[0])
-        else:
-            raise RuntimeError(f"Not found Experiment with id '{experiment_id}'")
-
-    def platform_create(self, experiment: Experiment, **kwargs) -> SlurmExperiment:
+    def platform_create(self, experiment: Experiment, **kwargs) -> FileExperiment:
         """
         Creates an experiment on Slurm Platform.
         Args:
@@ -75,7 +62,7 @@ class SlurmPlatformExperimentOperations(FilePlatformExperimentOperations):
         self.platform.update_script_mode(dest_script)
 
         # Return Slurm Experiment
-        return SlurmExperiment(meta)
+        return FileExperiment(meta)
 
     def platform_run_item(self, experiment: Experiment, dry_run: bool = False, **kwargs):
         """
@@ -91,21 +78,6 @@ class SlurmPlatformExperimentOperations(FilePlatformExperimentOperations):
         # Commission
         if not dry_run:
             self.platform.submit_job(experiment, **kwargs)
-
-    def platform_delete(self, experiment_id: str) -> None:
-        """
-        Delete platform experiment.
-        Args:
-            experiment_id: platform experiment id
-        Returns:
-            None
-        """
-        exp = self.platform.get_item(experiment_id, ItemType.EXPERIMENT, raw=False)
-        try:
-            shutil.rmtree(self.platform.get_directory(exp))
-        except RuntimeError:
-            logger.info("Could not delete the associated experiment...")
-            return
 
     def platform_cancel(self, experiment_id: str, force: bool = True) -> None:
         """
@@ -123,10 +95,26 @@ class SlurmPlatformExperimentOperations(FilePlatformExperimentOperations):
             if job_id is None:
                 logger.debug(f"Slurm job for experiment: {experiment_id} is not available!")
             else:
-                result = self.platform.cancel_job(job_id)
+                result = self.cancel_job(job_id)
                 user_logger.info(f"Cancel Experiment {experiment_id}: {result}")
         else:
             user_logger.info(f"Experiment {experiment_id} is not running, no cancel needed...")
+
+    @staticmethod
+    def cancel_job(job_ids: Union[str, List[str]]) -> Any:
+        """
+        Cancel Slurm job for given job ids.
+        Args:
+            job_ids: slurm jobs id
+        Returns:
+            Any
+        """
+        if isinstance(job_ids, str):
+            job_ids = [job_ids]
+        logger.debug(f"Submit slurm cancel job: {job_ids}")
+        result = subprocess.run(['scancel', *job_ids], stdout=subprocess.PIPE)
+        stdout = "Success" if result.returncode == 0 else 'Error'
+        return stdout
 
     def post_run_item(self, experiment: Experiment, dry_run: bool = False, **kwargs):
         """

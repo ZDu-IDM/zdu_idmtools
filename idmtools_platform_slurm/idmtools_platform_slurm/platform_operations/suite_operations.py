@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Type
 from logging import getLogger
 from idmtools.core import ItemType
 from idmtools_platform_file.platform_operations.suite_operations import FilePlatformSuiteOperations
-from idmtools_platform_slurm.platform_operations.utils import SlurmSuite
+from idmtools_platform_file.platform_operations.utils import FileSuite
 
 if TYPE_CHECKING:
     from idmtools_platform_slurm.slurm_platform import SlurmPlatform
@@ -24,7 +24,7 @@ class SlurmPlatformSuiteOperations(FilePlatformSuiteOperations):
     Provides Suite operation to the SlurmPlatform.
     """
     platform: 'SlurmPlatform'  # noqa F821
-    platform_type: Type = field(default=SlurmSuite)
+    platform_type: Type = field(default=FileSuite)
 
     def platform_cancel(self, suite_id: str, force: bool = False) -> None:
         """
