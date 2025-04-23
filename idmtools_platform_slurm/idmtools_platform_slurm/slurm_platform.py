@@ -4,7 +4,7 @@ Here we implement the SlurmPlatform object.
 Copyright 2021, Bill & Melinda Gates Foundation. All rights reserved.
 """
 import subprocess
-from typing import Optional, Union, Literal, Dict, Any
+from typing import Optional, Union, Literal, Dict, Any, List
 from dataclasses import dataclass, field, fields
 from logging import getLogger
 from idmtools.core import ItemType
@@ -201,3 +201,25 @@ class SlurmPlatform(FilePlatform):
             pass
         else:
             raise NotImplementedError(f"Submit job is not implemented on SlurmPlatform.")
+
+    def get_job_id(self, item_id: str, item_type: ItemType) -> List:
+        """
+        Retrieve the job id for item that had been run.
+        TODO: may move to FilePlatform
+        Args:
+            item_id: id of experiment/simulation
+            item_type: ItemType (Experiment or Simulation)
+        Returns:
+            List of slurm job ids
+        """
+        if item_type not in (ItemType.EXPERIMENT, ItemType.SIMULATION):
+            raise RuntimeError(f"Not support item type: {item_type}")
+
+        item_dir = self.get_directory_by_id(item_id, item_type)
+        job_id_file = item_dir.joinpath('job_id.txt')
+        if not job_id_file.exists():
+            logger.debug(f"{job_id_file} not found.")
+            return None
+
+        job_id = open(job_id_file).read().strip()
+        return job_id.split('\n')
