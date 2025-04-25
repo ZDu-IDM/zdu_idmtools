@@ -15,5 +15,4 @@ if TYPE_CHECKING:
 @dataclass
 class JSONMetadataOperations(FileJSONMetadataOperations):
     platform: 'SlurmPlatform'  # noqa: F821
-    platform_type: Type = field(default=None)
     # metadata_filename: str = field(default='metadata.json')

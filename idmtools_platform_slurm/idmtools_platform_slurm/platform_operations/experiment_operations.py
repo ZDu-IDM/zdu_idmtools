@@ -27,7 +27,6 @@ if TYPE_CHECKING:
 @dataclass
 class SlurmPlatformExperimentOperations(FilePlatformExperimentOperations):
     platform: 'SlurmPlatform'  # noqa: F821
-    platform_type: Type = field(default=FileExperiment)
 
     def platform_create(self, experiment: Experiment, **kwargs) -> FileExperiment:
         """

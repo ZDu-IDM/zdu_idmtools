@@ -22,7 +22,6 @@ logger = getLogger(__name__)
 @dataclass
 class SlurmPlatformSimulationOperations(FilePlatformSimulationOperations):
     platform: 'SlurmPlatform'  # noqa: F821
-    platform_type: Type = field(default=FileSimulation)
 
     def platform_cancel(self, sim_id: str, force: bool = False) -> Any:
         """

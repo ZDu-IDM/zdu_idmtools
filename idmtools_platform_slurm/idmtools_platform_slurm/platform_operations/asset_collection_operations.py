@@ -18,4 +18,3 @@ class SlurmPlatformAssetCollectionOperations(FilePlatformAssetCollectionOperatio
     Provides AssetCollection Operations to SlurmPlatform.
     """
     platform: 'SlurmPlatform'  # noqa F821
-    platform_type: Type = field(default=None)
