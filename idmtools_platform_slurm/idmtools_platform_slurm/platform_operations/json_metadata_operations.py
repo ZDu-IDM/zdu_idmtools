@@ -13,6 +13,6 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class JSONMetadataOperations(FileJSONMetadataOperations):
+class SlurmJSONMetadataOperations(FileJSONMetadataOperations):
     platform: 'SlurmPlatform'  # noqa: F821
     # metadata_filename: str = field(default='metadata.json')

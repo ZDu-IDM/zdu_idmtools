@@ -12,7 +12,7 @@ from idmtools.entities.experiment import Experiment
 from idmtools.entities.simulation import Simulation
 from idmtools_platform_file.file_platform import FilePlatform
 from idmtools_platform_slurm.assets import generate_batch, generate_script, generate_simulation_script
-from idmtools_platform_slurm.platform_operations.json_metadata_operations import JSONMetadataOperations
+from idmtools_platform_slurm.platform_operations.json_metadata_operations import SlurmJSONMetadataOperations
 from idmtools_platform_slurm.platform_operations.asset_collection_operations import \
     SlurmPlatformAssetCollectionOperations
 from idmtools_platform_slurm.platform_operations.experiment_operations import SlurmPlatformExperimentOperations
@@ -109,7 +109,7 @@ class SlurmPlatform(FilePlatform):
     _experiments: SlurmPlatformExperimentOperations = field(**op_defaults, repr=False, init=False)
     _simulations: SlurmPlatformSimulationOperations = field(**op_defaults, repr=False, init=False)
     _assets: SlurmPlatformAssetCollectionOperations = field(**op_defaults, repr=False, init=False)
-    _metas: JSONMetadataOperations = field(**op_defaults, repr=False, init=False)
+    _metas: SlurmJSONMetadataOperations = field(**op_defaults, repr=False, init=False)
 
     def __post_init__(self):
         super().__post_init__()
@@ -137,7 +137,7 @@ class SlurmPlatform(FilePlatform):
         self._experiments = SlurmPlatformExperimentOperations(platform=self)
         self._simulations = SlurmPlatformSimulationOperations(platform=self)
         self._assets = SlurmPlatformAssetCollectionOperations(platform=self)
-        self._metas = JSONMetadataOperations(platform=self)
+        self._metas = SlurmJSONMetadataOperations(platform=self)
 
     def post_setstate(self):
         self.__init_interfaces()
