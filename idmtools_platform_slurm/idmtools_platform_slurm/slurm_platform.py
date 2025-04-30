@@ -115,7 +115,6 @@ class SlurmPlatform(FilePlatform):
         super().__post_init__()
 
         self.__init_interfaces()
-        self.supported_types = {ItemType.SUITE, ItemType.EXPERIMENT, ItemType.SIMULATION}
 
         # check max_array_size from slurm configuration
         self._max_array_size = None
