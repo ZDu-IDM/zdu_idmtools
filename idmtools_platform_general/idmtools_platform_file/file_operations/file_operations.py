@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from logging import getLogger
 from pathlib import Path
 from typing import Union
-from idmtools.core import ItemType, EntityStatus
+from idmtools.core import ItemType, EntityStatus, NoPlatformException
 from idmtools.entities import Suite
 from idmtools.entities.experiment import Experiment
 from idmtools.entities.simulation import Simulation
@@ -56,38 +56,41 @@ class FileOperations(IOperations):
             title = item.id
         return title
 
-    def get_directory(self, item: Union[Suite, Experiment, Simulation]) -> Path:
+    def get_directory(self, item: Union[Suite, Experiment, Simulation], force: bool = False, **kwargs) -> Path:
         """
         Get item's path.
         Args:
             item: Suite, Experiment, Simulation
+            force: Force reload item directory
+            kwargs: Optional args used for specific platform behaviour
         Returns:
             item file directory
         """
-        if isinstance(item, Suite):
-            item_dir = Path(self.platform.job_directory, self.entity_display_name(item))
-        elif isinstance(item, Experiment):
-            suite_id = item.parent_id or item.suite_id
-            if suite_id is None:
-                raise RuntimeError("Experiment missing parent!")
-            suite = None
-            try:
-                suite = self.platform.get_item(suite_id, ItemType.SUITE)
-            except RuntimeError:
-                pass
-            if suite is None:
-                suite = item.parent
-            suite_dir = Path(self.platform.job_directory, self.entity_display_name(suite))
-            item_dir = Path(suite_dir, self.entity_display_name(item))
-        elif isinstance(item, Simulation):
-            exp = item.parent
-            if exp is None:
-                raise RuntimeError("Simulation missing parent!")
-            exp_dir = self.get_directory(exp)
-            item_dir = Path(exp_dir, self.entity_display_name(item))
-        else:
-            raise RuntimeError(f"Get directory is not supported for {type(item)} object on FilePlatform")
+        # if not item.platform:
+        #     raise NoPlatformException("The object has no platform set...")
 
+        # ZDU Note: we can add platform_directory to each object (both File... object and idmtools object!
+        # We may use item.platform_directory directly for both platform object and idmtools object!
+        item_dir = getattr(item, "platform_directory", None)
+        if item_dir is None or force:
+            if isinstance(item, Suite):
+                item_dir = Path(self.platform.job_directory, self.platform.entity_display_name(item))
+            elif isinstance(item, Experiment):
+                suite_id = item.parent_id or item.suite_id
+                if suite_id is None:
+                    raise RuntimeError("Experiment missing parent!")
+                suite_dir = Path(self.platform.job_directory, self.platform.entity_display_name(item.parent))
+                item_dir = Path(suite_dir, self.platform.entity_display_name(item))
+            elif isinstance(item, Simulation):
+                exp = item.parent
+                if exp is None:
+                    raise RuntimeError("Simulation missing parent!")
+                exp_dir = self.platform.get_directory(exp)
+                item_dir = Path(exp_dir, self.platform.entity_display_name(item))
+            else:
+                raise RuntimeError(f"Get directory is not supported for {type(item)} object on FilePlatform")
+
+            item.platform_directory = item_dir   # ZDU: added new since get_directory called multiple times!!
         return item_dir
 
     def get_directory_by_id(self, item_id: str, item_type: ItemType) -> Path:

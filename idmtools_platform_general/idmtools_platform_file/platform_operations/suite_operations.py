@@ -5,6 +5,7 @@ Copyright 2021, Bill & Melinda Gates Foundation. All rights reserved.
 """
 import shutil
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, List, Type, Dict, Tuple
 from logging import getLogger
 from idmtools.core import ItemType
@@ -121,6 +122,7 @@ class FilePlatformSuiteOperations(IPlatformSuiteOperations):
         suite.parent = None
         suite.tags = file_suite.tags
         suite._platform_object = file_suite
+        suite.platform_directory = Path(file_suite.dir)
         suite.experiments = []
 
         if children:

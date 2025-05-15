@@ -199,6 +199,7 @@ class FilePlatformExperimentOperations(IPlatformExperimentOperations):
         exp.parent = parent
         exp.tags = file_exp.tags
         exp._platform_object = file_exp
+        exp.platform_directory = Path(file_exp.dir)
         exp.simulations = []
 
         exp.assets = self.get_assets_from_file_experiment(file_exp)

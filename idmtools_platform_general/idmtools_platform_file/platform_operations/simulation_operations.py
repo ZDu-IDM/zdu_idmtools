@@ -5,6 +5,7 @@ Copyright 2021, Bill & Melinda Gates Foundation. All rights reserved.
 """
 import shutil
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import TYPE_CHECKING, List, Dict, Type, Optional, Any
 from idmtools.assets import Asset
 from idmtools.core import ItemType
@@ -157,6 +158,7 @@ class FilePlatformSimulationOperations(IPlatformSimulationOperations):
         sim.parent = parent
         sim.tags = file_sim.tags
         sim._platform_object = file_sim
+        sim.platform_directory = Path(file_sim.dir)
         # Convert status
         sim.status = file_sim.status
 
