@@ -42,6 +42,7 @@ from idmtools.assets.asset_collection import AssetCollection
 from idmtools.services.platforms import PlatformPersistService
 from idmtools.utils.caller import get_caller
 from idmtools.utils.entities import validate_user_inputs_against_dataclass
+from idmtools_platform_file.file_operations.attribute_decorator import check_id_type
 
 logger = getLogger(__name__)
 user_logger = getLogger('user')
@@ -165,6 +166,7 @@ class IPlatform(IItem, CacheEnabled, metaclass=ABCMeta):
         for fn in fs_kwargs:
             setattr(self, fn, field_value[fn])
 
+    # @check_id_type(id_index=1, type_index=2, debug=True)
     def _get_platform_item(self, item_id: str, item_type: ItemType, **kwargs) -> Any:
         """
         Get an item by its ID.
@@ -187,6 +189,7 @@ class IPlatform(IItem, CacheEnabled, metaclass=ABCMeta):
         interface = ITEM_TYPE_TO_OBJECT_INTERFACE[item_type]
         return getattr(self, interface).get(item_id, **kwargs)
 
+    # @check_id_type(id_index=1, type_index=2, debug=True)
     def get_item(self, item_id: str, item_type: ItemType = None, force: bool = False, raw: bool = False,
                  **kwargs) -> Union[Experiment, Suite, Simulation, IWorkflowItem, AssetCollection, None]:
         """

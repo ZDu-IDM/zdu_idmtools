@@ -182,12 +182,13 @@ class JSONMetadataOperations(imetadata_operations.IMetadataOperations):
         Args:
             item: idmtools entity (Suite, FileSuite, Experiment, FileExperiment)
         Returns:
-            Lis of metadata
+            List of metadata
         """
         if not isinstance(item, (Suite, FileSuite, Experiment, FileExperiment)):
             raise RuntimeError("Get children method supports [File]Suite and [File]Experiment only.")
         item_list = []
-        item_dir = self.platform.get_directory_by_id(item.id, item.item_type)
+        # item_dir = item.get_directory()
+        item_dir = self.platform.get_directory_by_id(item.id, item.item_type)   # zdu: avoid search
         pattern = f'*/{self.metadata_filename}'
         for meta_file in item_dir.glob(pattern=pattern):
             meta = self.load_from_file(meta_file)

@@ -20,6 +20,8 @@ from idmtools_platform_file.platform_operations.utils import FILE_MAPS, validate
     clean_experiment_name, validate_folder_files_path_length, FileExperiment, FileSimulation, FileSuite
 from idmtools.utils.decorators import check_symlink_capabilities
 
+from idmtools_platform_file.file_operations.attribute_decorator import check_attribute, check_id_type
+
 logger = getLogger(__name__)
 user_logger = getLogger('user')
 
@@ -56,6 +58,7 @@ class FileOperations(IOperations):
             title = item.id
         return title
 
+    # @check_attribute(attr='_platform_path', item_index=1, debug=True)
     def get_directory(self, item: Union[Suite, Experiment, Simulation]) -> Path:
         """
         Get item's path.
@@ -74,7 +77,7 @@ class FileOperations(IOperations):
                 raise RuntimeError("Experiment missing parent!")
             suite = None
             try:
-                suite = self.platform.get_item(suite_id, ItemType.SUITE)
+                suite = self.platform.get_item(suite_id, ItemType.SUITE, raw=False)  # zdu: raw=True: avoid load children
             except RuntimeError:
                 pass
             if suite is None:
@@ -92,6 +95,41 @@ class FileOperations(IOperations):
 
         return item_dir
 
+    # @check_attribute(attr='_platform_path', item_index=1, debug=True)
+    def get_directory_new(self, item: Union[Suite, Experiment, Simulation]) -> Path:
+        """
+        Get item's path.
+        Args:
+            item: Suite, Experiment, Simulation
+        Returns:
+            item file directory
+        """
+        if isinstance(item, (FileSimulation, FileExperiment, FileSuite)):
+            item_dir = item.get_directory()
+        elif isinstance(item, Suite):
+            item_dir = Path(self.platform.job_directory, self.entity_display_name(item))
+        elif isinstance(item, Experiment):
+            if item.parent:
+                suite = item.parent
+            else:
+                suite_id = item.parent_id or item.suite_id
+                if suite_id is None:
+                    raise RuntimeError("Experiment missing parent!")
+                suite = self.platform.get_item(suite_id, ItemType.SUITE, raw=True)    # zdu: avoid load children
+            suite_dir = Path(self.platform.job_directory, self.entity_display_name(suite))
+            item_dir = Path(suite_dir, self.entity_display_name(item))
+        elif isinstance(item, Simulation):
+            exp = item.parent
+            if exp is None:
+                raise RuntimeError("Simulation missing parent!")
+            exp_dir = self.get_directory(exp)
+            item_dir = Path(exp_dir, self.entity_display_name(item))
+        else:
+            raise RuntimeError(f"Get directory is not supported for {type(item)} object on FilePlatform")
+
+        return item_dir
+
+    # @check_id_type(id_index=1, type_index=2, debug=True)
     def get_directory_by_id(self, item_id: str, item_type: ItemType) -> Path:
         """
         Get item's path by id.
